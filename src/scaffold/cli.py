@@ -8,6 +8,9 @@ from .generators import (
     generate_python_cli,
     generate_python_lib,
     generate_fastapi,
+    generate_scraper,
+    generate_telegram_bot,
+    generate_rag,
 )
 
 
@@ -16,24 +19,21 @@ def main():
         prog="scaffold",
         description="Generate Python project structures with proven patterns."
     )
-    parser.add_argument("--version", action="version", version="0.1.0")
+    parser.add_argument("--version", action="version", version="0.2.0")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_script = sub.add_parser("script", help="Single-file Python script")
-    p_script.add_argument("name", help="Name of the script")
-    p_script.set_defaults(func=lambda args: generate_script(args.name))
+    def add(name, help_text, func):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("project_name", help="Name of the project")
+        p.set_defaults(func=lambda args: func(args.project_name))
 
-    p_cli = sub.add_parser("python-cli", help="Installable Python CLI tool")
-    p_cli.add_argument("name", help="Name of the project")
-    p_cli.set_defaults(func=lambda args: generate_python_cli(args.name))
-
-    p_lib = sub.add_parser("python-lib", help="Installable Python library")
-    p_lib.add_argument("name", help="Name of the project")
-    p_lib.set_defaults(func=lambda args: generate_python_lib(args.name))
-
-    p_api = sub.add_parser("fastapi", help="FastAPI web application")
-    p_api.add_argument("name", help="Name of the project")
-    p_api.set_defaults(func=lambda args: generate_fastapi(args.name))
+    add("script", "Single-file Python script", generate_script)
+    add("python-cli", "Installable Python CLI tool", generate_python_cli)
+    add("python-lib", "Installable Python library", generate_python_lib)
+    add("fastapi", "FastAPI web application", generate_fastapi)
+    add("scraper", "Web scraper (requests + BeautifulSoup)", generate_scraper)
+    add("telegram-bot", "Telegram bot (python-telegram-bot)", generate_telegram_bot)
+    add("rag", "RAG system (OpenAI + numpy)", generate_rag)
 
     args = parser.parse_args()
     try:

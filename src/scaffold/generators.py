@@ -107,3 +107,59 @@ def generate_fastapi(name: str) -> None:
 
     print(f"Created {root}/")
     print(f"Next: cd {folder} && pip install -e . && {name}")
+
+
+def generate_scraper(name: str) -> None:
+    folder, package = _normalize(name)
+    root = Path(folder)
+    if not _confirm_overwrite(root):
+        return
+    pkg = root / "src" / package
+    tests = root / "tests"
+    _write(root / "pyproject.toml", _fill(templates.PYPROJECT_SCRAPER, name, package))
+    _write(root / "README.md", _fill(templates.README, name, package))
+    _write(root / ".gitignore", templates.GITIGNORE)
+    _write(pkg / "__init__.py", _fill(templates.INIT_SCRAPER, name, package))
+    _write(pkg / "scraper.py", _fill(templates.SCRAPER_PY, name, package))
+    _write(pkg / "cli.py", _fill(templates.CLI_SCRAPER, name, package))
+    _write(tests / "__init__.py", "")
+    _write(tests / "test_scraper.py", _fill(templates.TEST_SCRAPER, name, package))
+    print(f"Created {root}/")
+    print(f"Next: cd {folder} && pip install -e . && {name} https://example.com --links")
+
+
+def generate_telegram_bot(name: str) -> None:
+    folder, package = _normalize(name)
+    root = Path(folder)
+    if not _confirm_overwrite(root):
+        return
+    pkg = root / "src" / package
+    tests = root / "tests"
+    _write(root / "pyproject.toml", _fill(templates.PYPROJECT_BOT, name, package))
+    _write(root / "README.md", _fill(templates.README, name, package))
+    _write(root / ".gitignore", templates.GITIGNORE)
+    _write(pkg / "__init__.py", _fill(templates.INIT_BOT, name, package))
+    _write(pkg / "bot.py", _fill(templates.BOT_PY, name, package))
+    _write(tests / "__init__.py", "")
+    _write(tests / "test_bot.py", _fill(templates.TEST_BOT, name, package))
+    print(f"Created {root}/")
+    print(f"Next: cd {folder} && pip install -e . && export TELEGRAM_BOT_TOKEN=... && {name}")
+
+
+def generate_rag(name: str) -> None:
+    folder, package = _normalize(name)
+    root = Path(folder)
+    if not _confirm_overwrite(root):
+        return
+    pkg = root / "src" / package
+    tests = root / "tests"
+    _write(root / "pyproject.toml", _fill(templates.PYPROJECT_RAG, name, package))
+    _write(root / "README.md", _fill(templates.README, name, package))
+    _write(root / ".gitignore", templates.GITIGNORE)
+    _write(pkg / "__init__.py", _fill(templates.INIT_RAG, name, package))
+    _write(pkg / "rag.py", _fill(templates.RAG_PY, name, package))
+    _write(pkg / "cli.py", _fill(templates.CLI_RAG, name, package))
+    _write(tests / "__init__.py", "")
+    _write(tests / "test_rag.py", _fill(templates.TEST_RAG, name, package))
+    print(f"Created {root}/")
+    print(f"Next: cd {folder} && pip install -e . && export OPENAI_API_KEY=... && {name} ingest file.txt")

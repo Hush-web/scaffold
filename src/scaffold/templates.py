@@ -214,3 +214,320 @@ def main():
 if __name__ == "__main__":
     main()
 '''
+
+
+# --- Scraper ---
+
+PYPROJECT_SCRAPER = """\
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "__NAME__"
+version = "0.1.0"
+description = "TODO"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+]
+
+[project.scripts]
+__NAME__ = "__PACKAGE__.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+"""
+
+INIT_SCRAPER = '''\
+"""__NAME__ - a web scraper."""
+
+from .scraper import fetch, parse_links
+
+__all__ = ["fetch", "parse_links"]
+'''
+
+SCRAPER_PY = '''\
+"""Scraper for __NAME__."""
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; __NAME__/0.1)"}
+
+
+def fetch(url: str, timeout: int = 15) -> str:
+    """Fetch HTML from a URL."""
+    response = requests.get(url, headers=HEADERS, timeout=timeout)
+    response.raise_for_status()
+    return response.text
+
+
+def parse_links(html: str, base: str = "") -> list[str]:
+    """Return all absolute links found in the HTML."""
+    soup = BeautifulSoup(html, "html.parser")
+    links = []
+    for a in soup.find_all("a", href=True):
+        links.append(urljoin(base, a["href"]))
+    return links
+'''
+
+CLI_SCRAPER = '''\
+"""CLI for __NAME__."""
+
+import argparse
+import sys
+
+from .scraper import fetch, parse_links
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="__NAME__")
+    parser.add_argument("url", help="URL to scrape")
+    parser.add_argument("--links", action="store_true", help="Print links")
+    args = parser.parse_args()
+
+    try:
+        html = fetch(args.url)
+    except Exception as e:
+        print(f"Failed to fetch: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.links:
+        for link in parse_links(html, base=args.url):
+            print(link)
+    else:
+        print(html[:2000])
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+TEST_SCRAPER = '''\
+from __PACKAGE__.scraper import parse_links
+
+
+def test_parse_links_basic():
+    html = '<html><body><a href="https://example.com">x</a></body></html>'
+    assert parse_links(html) == ["https://example.com"]
+'''
+
+
+# --- Telegram bot ---
+
+PYPROJECT_BOT = """\
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "__NAME__"
+version = "0.1.0"
+description = "TODO"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "python-telegram-bot>=21.0",
+]
+
+[project.scripts]
+__NAME__ = "__PACKAGE__.bot:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+"""
+
+INIT_BOT = '''\
+"""__NAME__ - a Telegram bot."""
+'''
+
+BOT_PY = '''\
+"""Telegram bot for __NAME__."""
+
+import os
+import sys
+
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+
+
+TOKEN_ENV = "TELEGRAM_BOT_TOKEN"
+
+
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hi! I am __NAME__.")
+
+
+async def cmd_echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = " ".join(context.args) if context.args else "nothing to echo"
+    await update.message.reply_text(text)
+
+
+async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"You said: {update.message.text}")
+
+
+def main():
+    token = os.getenv(TOKEN_ENV)
+    if not token:
+        print(f"Set {TOKEN_ENV} first.", file=sys.stderr)
+        sys.exit(1)
+
+    app = Application.builder().token(token).build()
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("echo", cmd_echo))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
+    print("Bot running. Ctrl+C to stop.")
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+TEST_BOT = '''\
+def test_placeholder():
+    assert True
+'''
+
+
+# --- RAG ---
+
+PYPROJECT_RAG = """\
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "__NAME__"
+version = "0.1.0"
+description = "TODO"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "openai>=1.0.0",
+    "numpy>=1.26.0",
+]
+
+[project.scripts]
+__NAME__ = "__PACKAGE__.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+"""
+
+INIT_RAG = '''\
+"""__NAME__ - a RAG system."""
+
+from .rag import Store, embed, answer
+
+__all__ = ["Store", "embed", "answer"]
+'''
+
+RAG_PY = '''\
+"""Minimal RAG system for __NAME__."""
+
+import os
+import numpy as np
+from openai import OpenAI
+
+
+MODEL_EMBED = os.getenv("RAG_EMBED_MODEL", "text-embedding-3-small")
+MODEL_CHAT = os.getenv("RAG_CHAT_MODEL", "gpt-4o-mini")
+
+
+def _client() -> OpenAI:
+    key = os.getenv("OPENAI_API_KEY")
+    if not key:
+        raise RuntimeError("Set OPENAI_API_KEY")
+    return OpenAI(api_key=key)
+
+
+def embed(text: str) -> list[float]:
+    """Embed a single string."""
+    response = _client().embeddings.create(model=MODEL_EMBED, input=text)
+    return response.data[0].embedding
+
+
+class Store:
+    """In-memory vector store."""
+
+    def __init__(self):
+        self.texts = []
+        self.vectors = []
+
+    def add(self, text: str) -> None:
+        self.texts.append(text)
+        self.vectors.append(embed(text))
+
+    def search(self, query: str, top_k: int = 3) -> list[str]:
+        if not self.texts:
+            return []
+        q = np.array(embed(query))
+        m = np.array(self.vectors)
+        sims = m @ q / (np.linalg.norm(m, axis=1) * np.linalg.norm(q) + 1e-9)
+        order = np.argsort(-sims)[:top_k]
+        return [self.texts[i] for i in order]
+
+
+def answer(store: Store, question: str) -> str:
+    """Retrieve context and ask the LLM."""
+    contexts = store.search(question, top_k=3)
+    context = "\\n\\n".join(contexts) if contexts else "(no context)"
+    prompt = f"Answer using only this context.\\n\\nContext:\\n{context}\\n\\nQuestion: {question}"
+    response = _client().chat.completions.create(
+        model=MODEL_CHAT,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+    return response.choices[0].message.content
+'''
+
+CLI_RAG = '''\
+"""CLI for __NAME__."""
+
+import argparse
+from pathlib import Path
+
+from .rag import Store, answer
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="__NAME__")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_ingest = sub.add_parser("ingest", help="Ingest a text file")
+    p_ingest.add_argument("path")
+
+    p_ask = sub.add_parser("ask", help="Ask a question")
+    p_ask.add_argument("question")
+
+    args = parser.parse_args()
+    store = Store()
+
+    if args.command == "ingest":
+        text = Path(args.path).read_text(encoding="utf-8", errors="ignore")
+        chunks = [c.strip() for c in text.split("\\n\\n") if c.strip()]
+        for c in chunks:
+            store.add(c)
+        print(f"Ingested {len(chunks)} chunks.")
+    else:
+        print(answer(store, args.question))
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+TEST_RAG = '''\
+from __PACKAGE__.rag import Store
+
+
+def test_store_is_empty():
+    assert Store().search("anything") == []
+'''

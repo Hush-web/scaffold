@@ -3,12 +3,27 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "scaffold"
+name = "hush-scaffold"
 version = "0.1.0"
 description = "Generate Python project structures with proven patterns"
 readme = "README.md"
 requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "Ayomide" }
+]
+keywords = ["scaffold", "template", "cli", "developer-tools", "project-generator"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Hush-web/scaffold"
+Repository = "https://github.com/Hush-web/scaffold"
 
 [project.scripts]
 scaffold = "scaffold.cli:main"
